@@ -1,16 +1,18 @@
-import jwt from "jsonwebtoken";
+import { SignJWT, jwtVerify } from "jose";
 
 export async function signAccessToken(payload: any) {
-	return jwt.sign(payload, process.env.JWT_SECRET);
+	const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+	return await new SignJWT(payload)
+		.setProtectedHeader({ alg: "HS256" })
+		.sign(secret);
 }
 
 export async function verifyAccessToken(token: any) {
 	try {
-		const decodedToken = <any>jwt.verify(token, process.env.JWT_SECRET);
-		return decodedToken;
+		const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+		const { payload } = await jwtVerify(token, secret);
+		return payload;
 	} catch (error) {
-		if (error instanceof jwt.JsonWebTokenError) {
-			return false;
-		}
+		return false;
 	}
 }
