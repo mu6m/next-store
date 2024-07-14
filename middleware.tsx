@@ -5,10 +5,10 @@ export async function middleware(request: NextRequest) {
 	const admin = cookies().get("admin");
 	const token = await verifyAccessToken(admin?.value);
 	if (token === false || !token || token.type != "ADMIN") {
-		return NextResponse.redirect(new URL("/admin/create", request.url));
+		return NextResponse.redirect(new URL("/admin/login", request.url));
 	}
 }
 
 export const config = {
-	matcher: ["/admin((?!/create).*)"],
+	matcher: ["/admin((?!/auth/create|/auth/login).*)"],
 };
