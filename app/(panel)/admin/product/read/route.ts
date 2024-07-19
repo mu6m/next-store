@@ -7,7 +7,6 @@ const perPage = 10;
 export const GET = async (request: any, params: any) => {
 	const searchParams = request.nextUrl.searchParams;
 	const search: string = searchParams.get("q") || "";
-	const all: string = searchParams.get("all") || "";
 	const id: string = searchParams.get("id");
 	const currentPage: number = Number(searchParams.get("page")) || 1;
 
@@ -24,25 +23,9 @@ export const GET = async (request: any, params: any) => {
 			}
 		);
 	}
-	if (all == "true") {
-		try {
-			const items = await prisma.category.findMany();
-			return Response.json(items);
-		} catch (error) {
-			return Response.json(
-				{
-					success: false,
-					message: `db error`,
-				},
-				{
-					status: 400,
-				}
-			);
-		}
-	}
 	if (id) {
 		try {
-			const item = await prisma.category.findFirstOrThrow({
+			const item = await prisma.product.findFirstOrThrow({
 				where: {
 					id,
 				},
@@ -60,16 +43,16 @@ export const GET = async (request: any, params: any) => {
 			);
 		}
 	}
-	const count = await prisma.category.count({
+	const count = await prisma.product.count({
 		where: {
 			OR: [
 				{
-					name: {
+					title: {
 						contains: search,
 					},
 				},
 				{
-					slug: {
+					content: {
 						contains: search,
 					},
 				},
@@ -77,22 +60,25 @@ export const GET = async (request: any, params: any) => {
 		},
 	});
 	const pages = Math.ceil(count / perPage);
-	const items = await prisma.category.findMany({
+	const items = await prisma.product.findMany({
 		skip: (currentPage - 1) * perPage,
 		take: perPage,
 		where: {
 			OR: [
 				{
-					name: {
+					title: {
 						contains: search,
 					},
 				},
 				{
-					slug: {
+					content: {
 						contains: search,
 					},
 				},
 			],
+		},
+		include: {
+			category: true,
 		},
 	});
 	return Response.json({ items, pages });
