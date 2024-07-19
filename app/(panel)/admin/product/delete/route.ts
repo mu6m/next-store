@@ -26,7 +26,7 @@ export const DELETE = async (request: any, params: any) => {
 		);
 	}
 	try {
-		await prisma.category.delete({
+		await prisma.product.delete({
 			where: {
 				id,
 			},

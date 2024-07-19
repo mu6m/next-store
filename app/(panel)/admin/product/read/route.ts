@@ -29,8 +29,12 @@ export const GET = async (request: any, params: any) => {
 				where: {
 					id,
 				},
+				include: {
+					category: true,
+				},
 			});
-			return Response.json(item);
+			const category = await prisma.category.findMany();
+			return Response.json({ item, category });
 		} catch (error) {
 			return Response.json(
 				{

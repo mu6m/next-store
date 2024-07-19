@@ -1,3 +1,3 @@
 # next store
 
-a next webapp for creating online stores
+a full stack nextjs webapp for creating online stores

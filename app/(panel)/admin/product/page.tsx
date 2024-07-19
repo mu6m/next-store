@@ -36,6 +36,7 @@ import { ExpandIcon, FilePenIcon } from "lucide-react";
 import Link from "next/link";
 import { useRef } from "react";
 import { useRouter } from "next/navigation";
+import View from "./view/View";
 
 export default function DataTable({ searchParams }: any) {
 	const fetcher = (url) => fetch(url).then((r) => r.json());
@@ -91,7 +92,7 @@ export default function DataTable({ searchParams }: any) {
 					<TableHeader>
 						<TableRow>
 							<TableHead>id</TableHead>
-							<TableHead>Title</TableHead>
+							<TableHead>title</TableHead>
 							<TableHead>limit</TableHead>
 							<TableHead>price</TableHead>
 							<TableHead>published</TableHead>
@@ -105,8 +106,17 @@ export default function DataTable({ searchParams }: any) {
 									return (
 										<TableRow key={item.id}>
 											<TableCell>{index + 1}</TableCell>
-											<TableCell className="font-medium">{item.name}</TableCell>
-											<TableCell>{item.slug}</TableCell>
+											<TableCell className="font-medium">
+												{item.title}
+											</TableCell>
+											<TableCell>
+												{item.limit} {item.limit == -1 && "(unlimited)"}
+											</TableCell>
+											<TableCell>{item.price}</TableCell>
+											<TableCell>{item.published.toString()}</TableCell>
+											<TableCell>
+												{item?.category?.name || "no category"}
+											</TableCell>
 											<TableCell>
 												<DropdownMenu>
 													<DropdownMenuTrigger asChild>
@@ -131,6 +141,13 @@ export default function DataTable({ searchParams }: any) {
 															}}
 														>
 															<Delete mutate={mutate} id={item.id} />
+														</DropdownMenuItem>
+														<DropdownMenuItem
+															onClick={(e) => {
+																e.preventDefault();
+															}}
+														>
+															<View id={item.id} />
 														</DropdownMenuItem>
 													</DropdownMenuContent>
 												</DropdownMenu>

@@ -94,11 +94,11 @@ function Alert({ state }: any) {
 }
 export default function Comp() {
 	const [state, formAction] = useActionState(form, initialState);
-	const fetcher = (url) => fetch(url).then((r) => r.json());
+	const fetcher = (url: any) => fetch(url).then((r) => r.json());
 	let { data } = useSWR(`/admin/category/read?all=true`, fetcher);
 	return (
 		<section>
-			<div className="flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
+			<div className="flex flex-col items-center justify-center px-6 py-8 mx-auto">
 				{state.message != "" && <Alert state={state} />}
 				<div className="w-full bg-white rounded-lg shadow md:mt-0 sm:max-w-md xl:p-0">
 					<div className="p-6 space-y-4 md:space-y-6 sm:p-8">
@@ -124,13 +124,14 @@ export default function Comp() {
 							</div>
 							<div>
 								<label
-									htmlForF="content"
+									htmlFor="content"
 									className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
 								>
 									content
 								</label>
 								<textarea
 									id="content"
+									name="content"
 									rows="4"
 									className="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
 									placeholder="..."
@@ -210,13 +211,18 @@ export default function Comp() {
 								<select
 									id="category"
 									className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+									name="category"
 								>
 									<option value="" selected>
 										no category
 									</option>
 									{data &&
-										data.map((item) => {
-											return <option value={item.id}>{item.name}</option>;
+										data.map((item: any) => {
+											return (
+												<option key={item.id} value={item.id}>
+													{item.name}
+												</option>
+											);
 										})}
 								</select>
 							</div>

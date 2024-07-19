@@ -25,4 +25,10 @@ export const navItems: NavItem[] = [
 		icon: "shopping",
 		label: "Orders",
 	},
+	{
+		title: "Users",
+		href: "/admin/user",
+		icon: "user",
+		label: "Users",
+	},
 ];

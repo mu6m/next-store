@@ -52,7 +52,7 @@ export default function Delete({ id, mutate }: any) {
 					<Button
 						onClick={async () => {
 							setLoading(true);
-							const { data } = await axios.delete("/admin/category/delete", {
+							const { data } = await axios.delete("/admin/product/delete", {
 								params: { id },
 							});
 							setLoading(false);
