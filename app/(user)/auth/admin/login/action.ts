@@ -33,6 +33,12 @@ export async function login(prevState: any, formData: FormData) {
 			message: `user not found`,
 		};
 	}
+	if (user.type != "ADMIN") {
+		return {
+			success: false,
+			message: `user is not an admin`,
+		};
+	}
 	const result = await bcrypt.compare(parse.data.password, user.password);
 	if (!result) {
 		return {
@@ -42,6 +48,6 @@ export async function login(prevState: any, formData: FormData) {
 	}
 	delete (user as any)["password"];
 	const user_token = await signAccessToken(user);
-	cookies().set("jwt", user_token);
-	redirect("/");
+	cookies().set("user", user_token);
+	redirect(`/admin/`);
 }

@@ -1,316 +1,188 @@
 "use client";
-
-import * as React from "react";
 import {
-	CaretSortIcon,
-	ChevronDownIcon,
-	DotsHorizontalIcon,
-} from "@radix-ui/react-icons";
-import {
-	ColumnDef,
-	ColumnFiltersState,
-	SortingState,
-	VisibilityState,
-	flexRender,
-	getCoreRowModel,
-	getFilteredRowModel,
-	getPaginationRowModel,
-	getSortedRowModel,
-	useReactTable,
-} from "@tanstack/react-table";
-
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-	DropdownMenu,
-	DropdownMenuCheckboxItem,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuLabel,
-	DropdownMenuSeparator,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+	Card,
+	CardHeader,
+	CardTitle,
+	CardContent,
+	CardFooter,
+} from "@/components/ui/card";
+import useSWR from "swr";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
 	Table,
-	TableBody,
-	TableCell,
-	TableHead,
 	TableHeader,
 	TableRow,
+	TableHead,
+	TableBody,
+	TableCell,
 } from "@/components/ui/table";
+import {
+	DropdownMenu,
+	DropdownMenuTrigger,
+	DropdownMenuContent,
+	DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
+import {
+	Pagination,
+	PaginationContent,
+	PaginationItem,
+	PaginationPrevious,
+	PaginationNext,
+} from "@/components/ui/pagination";
+import { Skeleton } from "@/components/ui/skeleton";
+import Delete from "./delete/Delete";
+import { ExpandIcon, FilePenIcon } from "lucide-react";
+import Link from "next/link";
+import { useRef } from "react";
+import { useRouter } from "next/navigation";
 
-const data: Payment[] = [
-	{
-		id: "m5gr84i9",
-		amount: 316,
-		status: "success",
-		email: "ken99@yahoo.com",
-	},
-	{
-		id: "3u1reuv4",
-		amount: 242,
-		status: "success",
-		email: "Abe45@gmail.com",
-	},
-	{
-		id: "derv1ws0",
-		amount: 837,
-		status: "processing",
-		email: "Monserrat44@gmail.com",
-	},
-	{
-		id: "5kma53ae",
-		amount: 874,
-		status: "success",
-		email: "Silas22@gmail.com",
-	},
-	{
-		id: "bhqecj4p",
-		amount: 721,
-		status: "failed",
-		email: "carmella@hotmail.com",
-	},
-];
-
-export type Payment = {
-	id: string;
-	amount: number;
-	status: "pending" | "processing" | "success" | "failed";
-	email: string;
-};
-
-export const columns: ColumnDef<Payment>[] = [
-	{
-		id: "select",
-		header: ({ table }) => (
-			<Checkbox
-				checked={
-					table.getIsAllPageRowsSelected() ||
-					(table.getIsSomePageRowsSelected() && "indeterminate")
-				}
-				onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-				aria-label="Select all"
-			/>
-		),
-		cell: ({ row }) => (
-			<Checkbox
-				checked={row.getIsSelected()}
-				onCheckedChange={(value) => row.toggleSelected(!!value)}
-				aria-label="Select row"
-			/>
-		),
-		enableSorting: false,
-		enableHiding: false,
-	},
-	{
-		accessorKey: "status",
-		header: "Status",
-		cell: ({ row }) => (
-			<div className="capitalize">{row.getValue("status")}</div>
-		),
-	},
-	{
-		accessorKey: "email",
-		header: ({ column }) => {
-			return (
-				<Button
-					variant="ghost"
-					onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-				>
-					Email
-					<CaretSortIcon className="ml-2 h-4 w-4" />
-				</Button>
-			);
-		},
-		cell: ({ row }) => <div className="lowercase">{row.getValue("email")}</div>,
-	},
-	{
-		accessorKey: "amount",
-		header: () => <div className="text-right">Amount</div>,
-		cell: ({ row }) => {
-			const amount = parseFloat(row.getValue("amount"));
-
-			// Format the amount as a dollar amount
-			const formatted = new Intl.NumberFormat("en-US", {
-				style: "currency",
-				currency: "USD",
-			}).format(amount);
-
-			return <div className="text-right font-medium">{formatted}</div>;
-		},
-	},
-	{
-		id: "actions",
-		enableHiding: false,
-		cell: ({ row }) => {
-			const payment = row.original;
-
-			return (
-				<DropdownMenu>
-					<DropdownMenuTrigger asChild>
-						<Button variant="ghost" className="h-8 w-8 p-0">
-							<span className="sr-only">Open menu</span>
-							<DotsHorizontalIcon className="h-4 w-4" />
-						</Button>
-					</DropdownMenuTrigger>
-					<DropdownMenuContent align="end">
-						<DropdownMenuLabel>Actions</DropdownMenuLabel>
-						<DropdownMenuItem
-							onClick={() => navigator.clipboard.writeText(payment.id)}
-						>
-							Copy payment ID
-						</DropdownMenuItem>
-						<DropdownMenuSeparator />
-						<DropdownMenuItem>View customer</DropdownMenuItem>
-						<DropdownMenuItem>View payment details</DropdownMenuItem>
-					</DropdownMenuContent>
-				</DropdownMenu>
-			);
-		},
-	},
-];
-
-export default function DataTableDemo() {
-	const [sorting, setSorting] = React.useState<SortingState>([]);
-	const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-		[]
+export default function DataTable({ searchParams }: any) {
+	const fetcher = (url) => fetch(url).then((r) => r.json());
+	let { data, mutate } = useSWR(
+		`/admin/category/read?${new URLSearchParams(searchParams).toString()}`,
+		fetcher
 	);
-	const [columnVisibility, setColumnVisibility] =
-		React.useState<VisibilityState>({});
-	const [rowSelection, setRowSelection] = React.useState({});
-
-	const table = useReactTable({
-		data,
-		columns,
-		onSortingChange: setSorting,
-		onColumnFiltersChange: setColumnFilters,
-		getCoreRowModel: getCoreRowModel(),
-		getPaginationRowModel: getPaginationRowModel(),
-		getSortedRowModel: getSortedRowModel(),
-		getFilteredRowModel: getFilteredRowModel(),
-		onColumnVisibilityChange: setColumnVisibility,
-		onRowSelectionChange: setRowSelection,
-		state: {
-			sorting,
-			columnFilters,
-			columnVisibility,
-			rowSelection,
-		},
-	});
-
+	const router = useRouter();
+	const search: string = searchParams.q || "";
+	const currentPage: number = Number(searchParams.page) || 1;
+	let nextPage = { ...searchParams };
+	let prevPage = { ...searchParams };
+	nextPage.page = currentPage + 1;
+	prevPage.page = currentPage - 1;
+	const nextUrl = `/admin/category?${new URLSearchParams(nextPage).toString()}`;
+	const prevUrl = `/admin/category?${new URLSearchParams(prevPage).toString()}`;
+	const search_input = useRef(null);
 	return (
-		<div className="w-full max-w-4xl mx-auto">
-			<div className="flex items-center py-4">
-				<Input
-					placeholder="Filter emails..."
-					value={(table.getColumn("email")?.getFilterValue() as string) ?? ""}
-					onChange={(event) =>
-						table.getColumn("email")?.setFilterValue(event.target.value)
-					}
-					className="max-w-sm"
-				/>
-				<DropdownMenu>
-					<DropdownMenuTrigger asChild>
-						<Button variant="outline" className="ml-auto">
-							Columns <ChevronDownIcon className="ml-2 h-4 w-4" />
+		<Card>
+			<CardHeader>
+				<CardTitle>Category</CardTitle>
+			</CardHeader>
+			<CardContent>
+				<div className="flex items-center justify-between mb-4">
+					<div className="flex items-center gap-2">
+						<Input
+							type="search"
+							placeholder="Search ..."
+							className="max-w-xs"
+							defaultValue={search}
+							ref={search_input}
+						/>
+						<Button
+							size="sm"
+							onClick={() => {
+								let newParams = { ...searchParams };
+
+								newParams.q = search_input?.current?.value || "";
+								const url = `/admin/category?${new URLSearchParams(
+									newParams
+								).toString()}`;
+								router.push(url);
+							}}
+						>
+							Search
 						</Button>
-					</DropdownMenuTrigger>
-					<DropdownMenuContent align="end">
-						{table
-							.getAllColumns()
-							.filter((column) => column.getCanHide())
-							.map((column) => {
-								return (
-									<DropdownMenuCheckboxItem
-										key={column.id}
-										className="capitalize"
-										checked={column.getIsVisible()}
-										onCheckedChange={(value) =>
-											column.toggleVisibility(!!value)
-										}
-									>
-										{column.id}
-									</DropdownMenuCheckboxItem>
-								);
-							})}
-					</DropdownMenuContent>
-				</DropdownMenu>
-			</div>
-			<div className="rounded-md border">
+					</div>
+					<Button size="sm" asChild>
+						<Link href="/admin/category/create">Create</Link>
+					</Button>
+				</div>
 				<Table>
 					<TableHeader>
-						{table.getHeaderGroups().map((headerGroup) => (
-							<TableRow key={headerGroup.id}>
-								{headerGroup.headers.map((header) => {
-									return (
-										<TableHead key={header.id}>
-											{header.isPlaceholder
-												? null
-												: flexRender(
-														header.column.columnDef.header,
-														header.getContext()
-												  )}
-										</TableHead>
-									);
-								})}
-							</TableRow>
-						))}
+						<TableRow>
+							<TableHead>id</TableHead>
+							<TableHead>Name</TableHead>
+							<TableHead>Slug</TableHead>
+							<TableHead>Actions</TableHead>
+						</TableRow>
 					</TableHeader>
 					<TableBody>
-						{table.getRowModel().rows?.length ? (
-							table.getRowModel().rows.map((row) => (
-								<TableRow
-									key={row.id}
-									data-state={row.getIsSelected() && "selected"}
-								>
-									{row.getVisibleCells().map((cell) => (
-										<TableCell key={cell.id}>
-											{flexRender(
-												cell.column.columnDef.cell,
-												cell.getContext()
-											)}
-										</TableCell>
-									))}
-								</TableRow>
-							))
-						) : (
-							<TableRow>
-								<TableCell
-									colSpan={columns.length}
-									className="h-24 text-center"
-								>
-									No results.
-								</TableCell>
-							</TableRow>
-						)}
+						{data
+							? data.items.map((item: any, index: number) => {
+									return (
+										<TableRow key={item.id}>
+											<TableCell>{index + 1}</TableCell>
+											<TableCell className="font-medium">{item.name}</TableCell>
+											<TableCell>{item.slug}</TableCell>
+											<TableCell>
+												<DropdownMenu>
+													<DropdownMenuTrigger asChild>
+														<Button size="icon" variant="ghost">
+															<ExpandIcon className="h-4 w-4" />
+															<span className="sr-only">Actions</span>
+														</Button>
+													</DropdownMenuTrigger>
+													<DropdownMenuContent align="end">
+														<DropdownMenuItem>
+															<Link
+																href={`/admin/category/${item.id}`}
+																className="flex gap-1"
+															>
+																<FilePenIcon className="h-4 w-4 mr-2" />
+																Edit
+															</Link>
+														</DropdownMenuItem>
+														<DropdownMenuItem
+															onClick={(e) => {
+																e.preventDefault();
+															}}
+														>
+															<Delete mutate={mutate} id={item.id} />
+														</DropdownMenuItem>
+													</DropdownMenuContent>
+												</DropdownMenu>
+											</TableCell>
+										</TableRow>
+									);
+							  })
+							: [...Array(7)].map((index: number) => {
+									return (
+										<TableRow key={index}>
+											<TableCell>
+												<Skeleton className="h-4 w-[250px]" />
+											</TableCell>
+											<TableCell>
+												<Skeleton className="h-4 w-[250px]" />
+											</TableCell>
+										</TableRow>
+									);
+							  })}
 					</TableBody>
 				</Table>
-			</div>
-			<div className="flex items-center justify-end space-x-2 py-4">
-				<div className="flex-1 text-sm text-muted-foreground">
-					{table.getFilteredSelectedRowModel().rows.length} of{" "}
-					{table.getFilteredRowModel().rows.length} row(s) selected.
-				</div>
-				<div className="space-x-2">
-					<Button
-						variant="outline"
-						size="sm"
-						onClick={() => table.previousPage()}
-						disabled={!table.getCanPreviousPage()}
-					>
-						Previous
-					</Button>
-					<Button
-						variant="outline"
-						size="sm"
-						onClick={() => table.nextPage()}
-						disabled={!table.getCanNextPage()}
-					>
-						Next
-					</Button>
-				</div>
-			</div>
-		</div>
+			</CardContent>
+			{data && data.items.length == 0 && (
+				<CardFooter>
+					<div className="mx-auto">
+						<div className="text-xs flex gap-1 w-full text-muted-foreground">
+							no data.
+						</div>
+					</div>
+				</CardFooter>
+			)}
+			{data && (
+				<CardFooter>
+					<div className="flex items-center justify-between">
+						<div className="text-xs flex gap-1 w-full text-muted-foreground">
+							page <strong>{currentPage}</strong> of{" "}
+							<strong>{Math.max(data.pages, 1)}</strong>
+						</div>
+						<Pagination>
+							<PaginationContent>
+								{currentPage > 1 && (
+									<PaginationItem>
+										<PaginationPrevious href={prevUrl} />
+									</PaginationItem>
+								)}
+								{currentPage < data.pages && (
+									<PaginationItem>
+										<PaginationNext href={nextUrl} />
+									</PaginationItem>
+								)}
+							</PaginationContent>
+						</Pagination>
+					</div>
+				</CardFooter>
+			)}
+		</Card>
 	);
 }

@@ -20,9 +20,9 @@ export const navItems: NavItem[] = [
 		label: "Categories",
 	},
 	{
-		title: "User",
-		href: "/admin/user",
-		icon: "profile",
-		label: "User",
+		title: "Orders",
+		href: "/admin/order",
+		icon: "shopping",
+		label: "Orders",
 	},
 ];

@@ -31,11 +31,14 @@ import {
 	X,
 	Box,
 	Rows4,
+	ShoppingCart,
+	ShoppingCartIcon,
 } from "lucide-react";
 
 export type Icon = LucideIcon;
 
 export const Icons = {
+	shopping: ShoppingCartIcon,
 	dashboard: LayoutDashboardIcon,
 	logo: Command,
 	login: LogIn,

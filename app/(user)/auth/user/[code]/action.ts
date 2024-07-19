@@ -58,6 +58,6 @@ export async function create(prevState: any, formData: FormData) {
 	});
 	delete (user as any)["password"];
 	const user_token = await signAccessToken(user);
-	cookies().set("jwt", user_token);
+	cookies().set("user", user_token);
 	redirect("/");
 }

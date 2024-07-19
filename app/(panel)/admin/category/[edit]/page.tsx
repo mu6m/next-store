@@ -2,8 +2,10 @@
 
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
-import { login } from "./action";
+import { form } from "./action";
 import { useParams } from "next/navigation";
+import { Skeleton } from "@/components/ui/skeleton";
+import useSWR from "swr";
 
 const initialState = {
 	success: true,
@@ -91,58 +93,72 @@ function Alert({ state }: any) {
 	);
 }
 export default function Comp() {
-	const [state, formAction] = useActionState(login, initialState);
+	const [state, formAction] = useActionState(form, initialState);
+	const params = useParams<{ edit: string }>();
+	const fetcher = (url) => fetch(url).then((r) => r.json());
+	let { data, mutate } = useSWR(
+		`/admin/category/read?id=${params.edit}`,
+		fetcher
+	);
+	if (state.success) {
+		mutate();
+	}
 	return (
-		<section className="bg-gray-50">
+		<section>
 			<div className="flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
 				{state.message != "" && <Alert state={state} />}
 				<div className="w-full bg-white rounded-lg shadow md:mt-0 sm:max-w-md xl:p-0">
 					<div className="p-6 space-y-4 md:space-y-6 sm:p-8">
 						<h1 className="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl">
-							Login Admin
+							Edit Category
 						</h1>
-						<form className="space-y-4 md:space-y-6" action={formAction}>
-							<div>
-								<label
-									htmlFor="user"
-									className="block mb-2 text-sm font-medium text-gray-900"
-								>
-									Your email/username
-								</label>
+						{data ? (
+							<form className="space-y-4 md:space-y-6" action={formAction}>
 								<input
 									type="text"
-									name="user"
-									id="user"
-									className="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
-									placeholder="..."
+									name="id"
+									hidden={true}
+									value={params.edit}
 								/>
-							</div>
-							<div>
-								<label
-									htmlFor="password"
-									className="block mb-2 text-sm font-medium text-gray-900"
-								>
-									Password
-								</label>
-								<input
-									type="password"
-									name="password"
-									id="password"
-									className="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
-									placeholder="..."
-								/>
-							</div>
-							<SubmitButton />
-							<p className="text-sm font-light text-gray-500">
-								don't have an account?{" "}
-								<a
-									href="/admin/create"
-									className="font-medium text-primary-600 hover:underline"
-								>
-									Create
-								</a>
-							</p>
-						</form>
+								<div>
+									<label
+										htmlFor="name"
+										className="block mb-2 text-sm font-medium text-gray-900"
+									>
+										name
+									</label>
+									<input
+										type="text"
+										name="name"
+										id="name"
+										className="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
+										placeholder="..."
+										defaultValue={data.name}
+									/>
+								</div>
+								<div>
+									<label
+										htmlFor="slug"
+										className="block mb-2 text-sm font-medium text-gray-900"
+									>
+										slug
+									</label>
+									<input
+										type="text"
+										name="slug"
+										id="slug"
+										className="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5"
+										placeholder="..."
+										defaultValue={data.slug}
+									/>
+								</div>
+								<SubmitButton />
+							</form>
+						) : (
+							[...Array(7)].map((index: number) => {
+								return <Skeleton className="h-4 w-[250px]" />;
+							})
+						)}
 					</div>
 				</div>
 			</div>
