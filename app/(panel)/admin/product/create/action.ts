@@ -24,7 +24,8 @@ export async function form(prevState: any, formData: FormData) {
 		limit: Number(formData.get("limit")),
 		price: Number(formData.get("price")),
 		published: Boolean(formData.get("published")),
-		category: formData.get("category") == "" && undefined,
+		category:
+			formData.get("category") === "" ? undefined : formData.get("category"),
 	});
 
 	if (!parse.success) {
